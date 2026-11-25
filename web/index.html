@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+<title>Počasí u nás · Chýně</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='7' fill='%23eb6834'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <div>
+      <h1>Počasí u nás</h1>
+      <p class="sub">Meteostanice Bulda · Chýně</p>
+    </div>
+    <p class="status" id="status" aria-live="polite">Načítám…</p>
+  </header>
+
+  <!-- ===== Právě teď ===== -->
+  <section aria-labelledby="h-now">
+    <h2 id="h-now" class="sr">Právě teď</h2>
+    <div class="now">
+      <div class="card hero">
+        <div class="hero-label">Venku teď</div>
+        <div class="hero-value"><span id="now-temp">–</span><span class="hero-unit">°C</span></div>
+        <div class="hero-trend" id="now-trend"></div>
+        <dl class="hero-facts">
+          <div><dt>Pocitově</dt><dd id="now-feels">–</dd></div>
+          <div><dt>Dnes nejníž</dt><dd id="now-min">–</dd></div>
+          <div><dt>Dnes nejvýš</dt><dd id="now-max">–</dd></div>
+        </dl>
+      </div>
+      <div class="tiles">
+        <div class="card tile">
+          <div class="tile-head">
+            <div class="tile-label">Vítr</div>
+            <svg class="compass" id="now-compass" viewBox="-22 -27 44 48" aria-hidden="true"></svg>
+          </div>
+          <div class="tile-value" id="now-wind">–</div>
+          <div class="tile-note" id="now-wind-note"></div>
+        </div>
+        <div class="card tile">
+          <div class="tile-label">Tlak vzduchu</div>
+          <div class="tile-value" id="now-bar">–</div>
+          <div class="tile-note" id="now-bar-note"></div>
+        </div>
+        <div class="card tile">
+          <div class="tile-label">Vlhkost</div>
+          <div class="tile-value" id="now-hum">–</div>
+          <div class="tile-note" id="now-hum-note"></div>
+        </div>
+        <div class="card tile">
+          <div class="tile-label">Srážky dnes</div>
+          <div class="tile-value" id="now-rain">–</div>
+          <div class="tile-note" id="now-rain-note"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Předpověď ===== -->
+  <section aria-labelledby="h-fc" id="fc-section" hidden>
+    <div class="sec-head">
+      <h2 id="h-fc">Předpověď</h2>
+      <p class="sec-note" id="fc-note"></p>
+    </div>
+    <div class="fc-texts" id="fc-texts"></div>
+    <div class="fc-days" id="fc-days" role="list" aria-label="Předpověď po dnech"></div>
+    <div class="card chart-card">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">Teplota na 48 hodin (°C)</h3>
+          <div class="legend" id="fc-temp-legend"></div>
+        </div>
+        <div class="readout" id="fc-temp-readout"></div>
+      </div>
+      <div class="chart" id="fc-temp"></div>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-head">
+        <h3 class="chart-title">Srážky na 48 hodin (mm)</h3>
+        <div class="readout" id="fc-rain-readout"></div>
+      </div>
+      <div class="chart" id="fc-rain"></div>
+    </div>
+    <details class="days">
+      <summary>Jak přesná je předpověď a odkud je</summary>
+      <p class="fc-explain" id="fc-explain"></p>
+      <div class="table-wrap">
+        <table class="tbl" id="fc-models"></table>
+      </div>
+    </details>
+    <p class="foot-note">Modely: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Weather data by Open-Meteo.com</a> (CC BY 4.0) – ČHMÚ, DWD, ECMWF, NOAA, Météo-France, Met Office, KNMI, DMI, Environment Canada. Upraveno podle měření stanice.</p>
+  </section>
+
+  <!-- ===== Průběh ===== -->
+  <section aria-labelledby="h-trend">
+    <div class="sec-head">
+      <h2 id="h-trend">Průběh</h2>
+      <div class="seg" role="group" aria-label="Období" id="range">
+        <button type="button" data-range="1" aria-pressed="true">24 hodin</button>
+        <button type="button" data-range="7" aria-pressed="false">7 dní</button>
+        <button type="button" data-range="30" aria-pressed="false">30 dní</button>
+      </div>
+    </div>
+    <p class="summary" id="range-summary"></p>
+    <div class="charts" id="charts"></div>
+  </section>
+
+  <!-- ===== Rok ===== -->
+  <section aria-labelledby="h-year">
+    <div class="sec-head">
+      <h2 id="h-year">Posledních 12 měsíců</h2>
+      <p class="sec-note" id="year-span"></p>
+    </div>
+
+    <div class="counts" id="year-counts"></div>
+
+    <h3>Rekordy</h3>
+    <div class="records" id="records"></div>
+
+    <div class="card chart-card">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">Teplota den po dni</h3>
+          <div class="legend" id="year-temp-legend"></div>
+        </div>
+        <div class="readout" id="year-temp-readout"></div>
+      </div>
+      <div class="chart" id="year-temp"></div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="chart-head">
+        <div>
+          <h3 class="chart-title">Kalendář</h3>
+          <div class="seg seg-sm" role="group" aria-label="Co zobrazit v kalendáři" id="cal-mode">
+            <button type="button" data-mode="temp" aria-pressed="true">Průměrná teplota</button>
+            <button type="button" data-mode="rain" aria-pressed="false">Srážky</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart" id="calendar"></div>
+      <div class="scale" id="cal-scale"></div>
+    </div>
+
+    <div class="two">
+      <div class="card chart-card">
+        <div class="chart-head"><h3 class="chart-title">Srážky po měsících</h3><div class="readout" id="rain-total"></div></div>
+        <div class="chart" id="month-rain"></div>
+      </div>
+      <div class="card chart-card">
+        <div class="chart-head"><h3 class="chart-title">Odkud fouká</h3><div class="readout" id="calm-note"></div></div>
+        <div class="chart" id="windrose"></div>
+      </div>
+    </div>
+
+    <h3>Měsíc po měsíci</h3>
+    <div class="table-wrap">
+      <table class="tbl" id="month-table"></table>
+    </div>
+    <p class="foot-note">
+      <b>Mrazový den</b> – teplota klesla pod 0 °C. <b>Ledový den</b> – celý den pod 0 °C.
+      <b>Letní den</b> – maximum aspoň 25 °C. <b>Tropický den</b> – maximum aspoň 30 °C.
+      <b>Tropická noc</b> – minimum neklesne pod 20 °C. <b>Deštivý den</b> – aspoň 1 mm srážek.
+    </p>
+
+    <details class="days">
+      <summary>Všechny dny v tabulce</summary>
+      <div class="table-wrap">
+        <table class="tbl" id="day-table"></table>
+      </div>
+    </details>
+  </section>
+
+  <footer class="foot">
+    Data ze stanice CCL W100 přes Weathercloud. Stahují se každých 10 minut, historie začíná 1. 12. 2025.
+  </footer>
+</main>
+
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

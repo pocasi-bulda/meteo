@@ -1,0 +1,7 @@
+# vygenerované soubory pro web (vznikají při každé aktualizaci)
+web/data/
+# původní exporty z Weathercloudu (převedené jsou v data/raw)
+historie-csv/
+__pycache__/
+*.tmp
+.claude/

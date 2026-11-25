@@ -1,0 +1,63 @@
+name: Aktualizace počasí
+
+on:
+  schedule:
+    - cron: "4,19,34,49 * * * *"   # každých 15 minut (GitHub to může o pár minut zpozdit)
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "*.py"
+      - ".github/workflows/**"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: meteo-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Načíst poslední předpověď z webu (ať se modely nestahují zbytečně často)
+        run: |
+          mkdir -p web/data
+          curl -fsSL "${{ steps.pages.outputs.base_url }}/data/forecast.json" -o web/data/forecast.json || rm -f web/data/forecast.json
+
+      - name: Stáhnout data ze stanice a spočítat předpověď
+        run: python collect.py
+
+      - name: Uložit nová měření do repozitáře
+        run: |
+          git config user.name "meteo-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if ! git diff --cached --quiet; then
+            git commit -q -m "Data $(date -u +'%Y-%m-%d %H:%M') UTC"
+            git push -q || (git pull -q --rebase && git push -q)
+          fi
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: web
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
